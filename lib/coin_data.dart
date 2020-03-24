@@ -29,24 +29,34 @@ const List<String> cryptoList = [
   'BTC',
   'ETH',
   'LTC',
+  'DOGE',
 ];
 
 const coinAPIURL = 'https://rest.coinapi.io/v1/exchangerate';
-const apiKey = 'YOUR-API-KEY-HERE';
+const apiKey = 'A404AE1E-B3BD-4680-8070-AE982503F3C0';
+Map<String, String> headers = {'X-CoinAPI-Key':apiKey};
 
 class CoinData {
   Future getCoinData(String selectedCurrency) async {
-    //TODO 4: Use a for loop here to loop through the cryptoList and request the data for each of them in turn.
-    //TODO 5: Return a Map of the results instead of a single value.
-    String requestURL = '$coinAPIURL/BTC$selectedCurrency';
-    http.Response response = await http.get(requestURL);
-    if (response.statusCode == 200) {
-      var decodedData = jsonDecode(response.body);
-      var lastPrice = decodedData['rate'];
-      return lastPrice;
-    } else {
-      print(response.statusCode);
-      throw 'Problem with the get request';
+
+    var cryptoPrices = {};
+    for(String crypto in cryptoList) {
+      String requestURL = '$coinAPIURL/$crypto/$selectedCurrency';
+      http.Response response = await http.get(requestURL, headers: headers);
+
+      if (response.statusCode == 200) {
+        var decodedData = jsonDecode(response.body);
+        double lastPrice = decodedData['rate'].toDouble();
+        if(crypto != 'DOGE') {
+          cryptoPrices[crypto] = lastPrice.toStringAsFixed(0);
+        } else {
+          cryptoPrices[crypto] = lastPrice.toStringAsFixed(10);
+        }
+      } else {
+        print(response.statusCode);
+        throw 'Problem with the get request';
+      }
     }
+    return cryptoPrices;
   }
 }
